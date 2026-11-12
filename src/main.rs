@@ -19,7 +19,7 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp {
-    // first_render: bool,
+    first_render: bool,
     ui_ctx: egui::Context,
     source_tz_str: String,
     source_tz: FixedOffset,
@@ -29,48 +29,26 @@ struct MyApp {
     errors: Vec<String>,
 }
 
-// impl Default for MyApp {
-//     fn default() -> Self {
-//         let utcnow = Utc::now();
-//         Self {
-//             first_render: true,
-//             ui_ctx: None,
-//             source_tz_str: String::from("UTC"),
-//             source_tz: FixedOffset::west_opt(0).unwrap(),
-//             timestamp_str: utcnow.to_string(),
-//             timezones_str: String::from("PST, CST, EDT"),
-//             datetime: utcnow,
-//             errors: Vec::<String>::new(),
-//         }
-//     }
-// }
-
 impl eframe::App for MyApp {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // if self.first_render {
-        //     self.first_render = false;
-        //     egui::Window::new("measure")
-        //         .title_bar(false)
-        //         .fixed_pos((0.0, 0.0))
-        //         .show(ctx, |ui| self.show_main_content(ui));
-        //     self.ui_size = ctx.viewport_rect().size();
-        //     ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
-        // }
         self.ui_ctx = ctx.clone();
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        if self.first_render {
+            // Calculate desired size
+            let new_size = egui::Vec2::new(600.0, 400.0);
+            // Send the command
+            self.ui_ctx
+                .send_viewport_cmd(egui::ViewportCommand::InnerSize(new_size));
+            self.first_render = false;
+        }
         egui::CentralPanel::default().show(ui, |ui| {
             self.show_main_content(ui);
         });
         // let size = self.ui_ctx.viewport_rect().size();
         // self.ui_ctx
         //     .send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
-        // Calculate desired size
-        let new_size = egui::Vec2::new(800.0, 600.0);
-        // Send the command
-        self.ui_ctx
-            .send_viewport_cmd(egui::ViewportCommand::InnerSize(new_size));
     }
 }
 
@@ -78,7 +56,7 @@ impl MyApp {
     fn new(cc: &eframe::CreationContext) -> Self {
         let utcnow = Utc::now();
         Self {
-            // first_render: true,
+            first_render: true,
             ui_ctx: cc.egui_ctx.clone(),
             source_tz_str: String::from("UTC"),
             source_tz: FixedOffset::west_opt(0).unwrap(),
