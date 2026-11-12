@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 chrono = "0.4.45"
+clipboard-win = "5.4.3"
 dateparser = "0.3.1"
 eframe = "0.37.0"
 egui = "0.37.0"

@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use chrono::{DateTime, FixedOffset, Utc};
+use clipboard_win::{Clipboard, Getter, Setter, formats};
 use dateparser::timezone;
 use eframe::egui;
 use egui::Color32;
@@ -126,8 +127,20 @@ impl MyApp {
                     })
                     .collect();
                 for tz in tzs {
+                    let localized_datetime_str = self.datetime.with_timezone(&tz).to_string();
                     ui.label(tz.to_string());
-                    ui.label(self.datetime.with_timezone(&tz).to_string());
+                    ui.label(localized_datetime_str.clone());
+                    if ui.button("Copy").clicked() {
+                        if let Some(cb) = Clipboard::new_attempts(10).ok() {
+                            let lds = localized_datetime_str.clone();
+                            match formats::Unicode.write_clipboard(&lds.as_str()) {
+                                Ok(_) => {}
+                                Err(_) => self.errors.push(String::from("Failed to copy")),
+                            }
+                        } else {
+                            self.errors.push(String::from("Failed to copy"));
+                        }
+                    }
                     ui.end_row();
                 }
             });
