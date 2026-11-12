@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use chrono::{DateTime, FixedOffset, Utc};
-use clipboard_win::{Clipboard, Getter, Setter, formats};
+use clipboard_win::{Clipboard, Setter, formats};
 use dateparser::timezone;
 use eframe::egui;
 use egui::Color32;
@@ -13,10 +13,26 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "Timestamp Xlate",
+        "BabelTs",
         options,
         Box::new(|cc| Ok(Box::new(MyApp::new(cc)))),
     )
+}
+
+fn date_format_str_valid(date_fmt_str: &str) -> bool {
+    let mut chars = date_fmt_str.chars().peekable();
+    let mut valid = true;
+    while let Some(current) = chars.next() {
+        let invalid = match (current, chars.peek()) {
+            (curr, Some(next_char)) => curr == '%' && !next_char.is_ascii_alphabetic(),
+            (curr, None) => curr == '%',
+        };
+        if invalid {
+            valid = false;
+            break;
+        }
+    }
+    valid
 }
 
 struct MyApp {
@@ -26,6 +42,7 @@ struct MyApp {
     source_tz: FixedOffset,
     timestamp_str: String,
     timezones_str: String,
+    output_format_str: String,
     datetime: DateTime<Utc>,
     errors: Vec<String>,
 }
@@ -63,13 +80,14 @@ impl MyApp {
             source_tz: FixedOffset::west_opt(0).unwrap(),
             timestamp_str: utcnow.to_string(),
             timezones_str: String::from("PST, CST, EDT"),
+            output_format_str: String::from(""),
             datetime: utcnow,
             errors: Vec::<String>::new(),
         }
     }
 
     fn show_main_content(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Timestamp Xlate");
+        ui.heading("BabelTs");
         egui::Grid::new("main_widget_grid")
             .min_col_width(100.0)
             .max_col_width(400.0)
@@ -87,6 +105,11 @@ impl MyApp {
                     ui.add(egui::Label::new("Timezones").halign(egui::Align::Max));
                 ui.text_edit_singleline(&mut self.timezones_str)
                     .labelled_by(timezones_label.id);
+                ui.end_row();
+                let format_label =
+                    ui.add(egui::Label::new("Output Format").halign(egui::Align::Max));
+                ui.text_edit_singleline(&mut self.output_format_str)
+                    .labelled_by(format_label.id);
                 ui.end_row();
             });
         if let Some(source_tz) = timezone::parse(&self.source_tz_str).ok() {
@@ -127,11 +150,20 @@ impl MyApp {
                     })
                     .collect();
                 for tz in tzs {
-                    let localized_datetime_str = self.datetime.with_timezone(&tz).to_string();
+                    let localized_datetime_str = match !self.output_format_str.is_empty()
+                        && date_format_str_valid(self.output_format_str.as_str())
+                    {
+                        true => self
+                            .datetime
+                            .with_timezone(&tz)
+                            .format(&self.output_format_str.as_str())
+                            .to_string(),
+                        false => self.datetime.with_timezone(&tz).to_string(),
+                    };
                     ui.label(tz.to_string());
                     ui.label(localized_datetime_str.clone());
                     if ui.button("Copy").clicked() {
-                        if let Some(cb) = Clipboard::new_attempts(10).ok() {
+                        if let Some(_cb) = Clipboard::new_attempts(10).ok() {
                             let lds = localized_datetime_str.clone();
                             match formats::Unicode.write_clipboard(&lds.as_str()) {
                                 Ok(_) => {}

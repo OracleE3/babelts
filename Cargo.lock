@@ -803,6 +803,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "datetime-string"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4edc665eae509f354e995da20f6d374bbfcec78f3212d47a88fdfb1f4eb9f6e5"
+
+[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3583,6 +3589,7 @@ dependencies = [
  "chrono",
  "clipboard-win",
  "dateparser",
+ "datetime-string",
  "eframe",
  "egui",
  "egui_extras",
