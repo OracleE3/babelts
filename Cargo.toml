@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chrono = "0.4.45"
+dateparser = "0.3.1"
 eframe = "0.37.0"
 egui = "0.37.0"
 egui_extras = "0.37.0"
